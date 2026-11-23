@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tiny House of Big Obsessions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: warm, whimsical, a late-night peek into a handmade miniature.
+   IDEA: an open-backed dollhouse sitting on a wooden worktable under a desk lamp.
+   PICTURE: the full-bleed Gaussian-splat house itself; UI floats like little brass labels.
+   COLOUR and TYPE: wine-brown night, lamplight cream text, rose-gold accent; Fraunces + Figtree.
+   LAYOUT: canvas fills the screen; title top-left, room dock along the bottom, room card above it. */
+:root{color-scheme:dark;--bg:#1a0d12;--ink:#f7e9d6;--mute:#d6bfa6;--glass:rgba(34,18,20,.62);--edge:rgba(255,220,180,.16);--acc:#f2a07b}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(120% 90% at 28% 12%,#5d3426 0%,#2e171b 42%,#140a0e 100%)}
+#c{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:grab}
+#c:active{cursor:grabbing}
+.top{position:fixed;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));max-width:min(440px,calc(100vw - 36px));pointer-events:none}
+h1{font:650 clamp(26px,4.2vw,42px)/1.05 Fraunces,Georgia,serif;margin:0;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 18px rgba(0,0,0,.5)}
+.top p{margin:8px 0 0;color:var(--mute);font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+#dock{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:8px;padding:0 max(14px,env(safe-area-inset-left));overflow-x:auto;scrollbar-width:none;justify-content:safe center}
+#dock::-webkit-scrollbar{display:none}
+button{font:inherit;color:inherit}
+#dock button,#labels button,.nav button{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--edge);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s}
+#dock button:hover,.nav button:hover{background:rgba(70,36,34,.75)}
+#dock button[aria-pressed=true]{background:var(--ink);color:#2a1418;border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+i{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+#labels button{position:fixed;left:0;top:0;min-height:36px;padding:0 13px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .35s}
+#labels button.on{opacity:1;pointer-events:auto}
+body.inroom #labels{display:none}
+#card{position:fixed;left:max(18px,env(safe-area-inset-left));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 62px);width:min(360px,calc(100vw - 36px));padding:18px 18px 14px;border-radius:18px;background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .4s,transform .4s}
+body.inroom #card{opacity:1;transform:none;pointer-events:auto}
+#ctheme{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);margin:0}
+#ctheme::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--dot,#fff)}
+#cname{font:650 26px/1.1 Fraunces,Georgia,serif;margin:6px 0 8px}
+#cblurb{margin:0 0 12px;font-size:15px;color:#efdcc6}
+.nav{display:flex;gap:8px}.nav #home{flex:1;justify-content:center}
+.nav #prev,.nav #next{width:44px;padding:0;justify-content:center;font-size:18px}
+#hint{position:fixed;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 66px);transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:13px;color:var(--mute);white-space:nowrap;transition:opacity .6s;pointer-events:none}
+#hint.gone,body.inroom #hint{opacity:0}
+#rhint{position:fixed;left:50%;top:max(16px,env(safe-area-inset-top));transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--edge);font-size:13px;color:var(--mute);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .6s}
+body.inroom #rhint{opacity:1}body.inroom #rhint.gone{opacity:0}
+.top{transition:opacity .6s}body.inroom .top{opacity:0}
+#cname{cursor:pointer}
+#ctheme,#cblurb{transition:opacity .3s}
+body.quiet #ctheme,body.quiet #cblurb{display:none}
+body.quiet #card{padding:10px 12px 10px}body.quiet #cname{font-size:20px;margin:0 0 8px}
+#load{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;padding:24px;transition:opacity .7s;background:radial-gradient(60% 50% at 50% 45%,#3a1f1c,#140a0e)}
+#load.gone{opacity:0;pointer-events:none}
+#load p{margin:0;color:var(--mute);font-size:15px}
+.spin{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#ffe3b0,#f2a07b 40%,rgba(242,160,123,0) 70%);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.7);opacity:.6}}
+@media(max-width:600px){
+ .top p{font-size:13px}
+ #card{left:12px;right:12px;width:auto;padding:14px 14px 12px}
+ #cname{font-size:22px}#cblurb{font-size:14px}
+ #hint,#rhint{white-space:normal;width:calc(100vw - 40px);text-align:center}
+ #dock{justify-content:flex-start}
+ #labels{display:none}
+ #cblurb{font-size:13.5px;line-height:1.45}
+}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="An explorable miniature dollhouse with six themed rooms, rendered from Gaussian splats"></canvas>
+<header class="top">
+ <h1>Tiny House of Big Obsessions</h1>
+ <p>Six rooms, <span id="count">many thousand</span> Gaussian splats, all generated in code.</p>
+</header>
+<div id="labels"></div>
+<section id="card" aria-live="polite">
+ <p id="ctheme"></p><h2 id="cname"></h2><p id="cblurb"></p>
+ <div class="nav"><button id="prev" aria-label="Previous room">‹</button><button id="home">Whole house</button><button id="next" aria-label="Next room">›</button></div>
+</section>
+<p id="rhint"></p>
+<p id="hint">Drag to look around · pinch or scroll to zoom · tap a room to step inside</p>
+<nav id="dock" aria-label="Rooms"></nav>
+<div id="load"><div class="spin"></div><p>Placing tiny splats in tiny rooms…</p></div>
+<script>
+/*GEN*/
+</script>
+<script>
+/*MAIN*/
+</script>
+</body>
+</html>
