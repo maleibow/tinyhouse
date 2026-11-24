@@ -27,6 +27,11 @@ Open `index.html` in a browser. It's a single self-contained file. The only outs
 - Pinch or scroll to zoom.
 - Leave with the bottom menu, the "Whole house" button or Esc. Keys 1–6 jump straight to a room.
 
+## Rendering
+
+- **High-detail rooms:** when you step inside a room that has a high-detail version (Clandestino so far), the renderer switches to a separate, denser splat set built just for that room in a background worker. It adds bump-mapped materials (embossed tin, recessed mortar, plank grooves, wood ribs), soft shadows from the bar and furniture, light bouncing between surfaces, contact shadows and small handmade imperfections.
+- **Post-processing:** bloom on the lamps, a miniature-style tilt-shift depth of field, filmic tone mapping with a warm grade, a vignette and film grain.
+
 ## How it works
 
 - `src/gen.js` builds the world procedurally. Small primitives (quads, boxes, cylinders, spheres, lines, rings and triangles) emit anisotropic 3D Gaussians, and their colours come from baked per-room point lights and ambient occlusion. Animated splats (flames, candles, dust, smoke, bubbles, water) are tagged with flag bits. Each room's "fourth wall" is tagged with its room id and only drawn while the camera is inside that room.
