@@ -17,7 +17,7 @@ else setTimeout(start,40);
 
 function start(){
 const t0=performance.now();
-const DETAIL=[5];
+const DETAIL=[5,3];
 // ---- generation worker: builds and packs splat sets off the main thread ----
 const gsrc=buildWorld.toString()+`
 const fb=new Float32Array(1),ib=new Uint32Array(fb.buffer);
