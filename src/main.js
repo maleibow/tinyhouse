@@ -17,7 +17,9 @@ else setTimeout(start,40);
 
 function start(){
 const t0=performance.now();
-const DETAIL=[5,3];
+const DETAIL=[0,1,2,3,4,5],pend=new Set(),MAXD=MOBILE?2:6;
+function ensureDetail(k){const id='r'+k;if(!DETAIL.includes(k)||sets[id]||pend.has(id)||!sets.base)return;pend.add(id);gw.postMessage({id,Q:MOBILE?1.35:1,room:k})}
+function dropSet(id){const s=sets[id];if(!s)return;gl.deleteTexture(s.tex);gl.deleteBuffer(s.ixb);gl.deleteVertexArray(s.vao);delete sets[id]}
 // ---- generation worker: builds and packs splat sets off the main thread ----
 const gsrc=buildWorld.toString()+`
 const fb=new Float32Array(1),ib=new Uint32Array(fb.buffer);
@@ -91,9 +93,10 @@ function makeSet(m){const vao=gl.createVertexArray();gl.bindVertexArray(vao);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32UI,2048,m.rows,0,gl.RGBA_INTEGER,gl.UNSIGNED_INT,m.data);
   sw.postMessage({id:m.id,P:m.P},[m.P.buffer]);
   return{id:m.id,N:m.N,vao,ixb,tex,have:false,sorting:false,lastSent:null}}
-gw.onmessage=e=>{const m=e.data;sets[m.id]=makeSet(m);
+gw.onmessage=e=>{const m=e.data;pend.delete(m.id);sets[m.id]=makeSet(m);sets[m.id].used=performance.now();
+  if(m.id!=='base'){const ds=Object.values(sets).filter(x=>x.id!=='base').sort((a,b)=>a.used-b.used);while(ds.length>MAXD){const o=ds.shift();if(o.id!=='r'+mode)dropSet(o.id)}}
   if(m.id==='base'){$('#count').textContent=Math.round(m.N/1000)+',000';console.log('base splats',m.N,Math.round(performance.now()-t0),'ms');
-    for(const k of DETAIL)gw.postMessage({id:'r'+k,Q:MOBILE?1.35:1,room:k})}
+    if(mode>=0)ensureDetail(mode)}
   else console.log('detail',m.id,m.N)};
 gw.postMessage({id:'base',Q:MOBILE?1.45:1});
 sw.onmessage=e=>{const s=sets[e.data.id];gl.bindBuffer(gl.ARRAY_BUFFER,s.ixb);gl.bufferData(gl.ARRAY_BUFFER,e.data.o,gl.DYNAMIC_DRAW);s.have=true;s.sorting=false;
@@ -178,7 +181,7 @@ function nextTween(){if(!queue.length){tween=null;arrived();return}const to=queu
 function go(i){const cur=mode,B=basis();queue=[];
   if(cur>=0&&roomOfEye(B.e)===cur)queue.push(doorway(cur));
   if(i<0)queue.push(overview());else{queue.push(doorway(i));queue.push(insideGoal(i))}
-  mode=i;nextTween();ui()}
+  mode=i;if(i>=0)ensureDetail(i);nextTween();ui()}
 let quietT=0;
 function arrived(){if(mode>=0){clearTimeout(quietT);quietT=setTimeout(()=>document.body.classList.add('quiet'),6500)}}
 function basis(){const cp=Math.cos(cam.pitch),e=[cam.tx+cam.dist*cp*Math.sin(cam.yaw),cam.ty+cam.dist*Math.sin(cam.pitch),cam.tz+cam.dist*cp*Math.cos(cam.yaw)];
@@ -250,7 +253,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)
   else if(mode<0&&!RM&&now-lastInput>6000){cam.yaw+=(.42*Math.sin(now*.00011)-wrap(cam.yaw))*Math.min(1,dt*.25)}
   keyMove(dt);
   const B=basis(),V=viewMat(B),inR=roomOfEye(B.e);uRoomV=inR+1;
-  const det=inR>=0?sets['r'+inR]:null,act=det&&det.have?det:sets.base;
+  const det=inR>=0?sets['r'+inR]:null,act=det&&det.have?det:sets.base;if(det)det.used=now;
   requestSort(act,V);if(det&&!det.have)requestSort(det,V);
   tiltV+=((inR>=0?.26:1)-tiltV)*Math.min(1,dt*3);
   renderFrame(act,V,now);
